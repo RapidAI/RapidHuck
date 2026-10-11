@@ -44,11 +44,13 @@ jobs:
         run: |
           set -e
           mkdir -p dist
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            cp build/Release/RapidHuck.exe dist/
-          else
-            cp build/RapidHuck dist/
-          fi
+          case "${{ runner.os }}" in
+            Windows) NAME="RapidHuck-windows-x86_64.exe"; SRC="build/Release/RapidHuck.exe" ;;
+            Linux)   NAME="RapidHuck-linux-x86_64";       SRC="build/RapidHuck" ;;
+            macOS)   NAME="RapidHuck-macos-$(uname -m)";  SRC="build/RapidHuck" ;;
+            *)       NAME="RapidHuck-unknown";            SRC="build/RapidHuck" ;;
+          esac
+          cp "$SRC" "dist/$NAME"
           ls -la dist
 
       - name: Upload artifact
@@ -68,6 +70,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: List collected files
+        run: find artifacts -type f -exec ls -la {} +
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
